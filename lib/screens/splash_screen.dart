@@ -1,11 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:petcare_mobile/screens/home_screen.dart';
 
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
+
+    Future.delayed(const Duration(seconds: 3)).then((value){
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (context) => const HomeScreen(),
+      ),
+          (route) => false);
+    });
+
     return Scaffold(
       body: Container(
         width: double.infinity,
@@ -24,12 +38,26 @@ class SplashScreen extends StatelessWidget {
               ),
               SvgPicture.asset('assets/svg/logo.svg', width: 300, height: 300,
               ),
-              const Text.rich(TextSpan(text: "Membantu anda untuk memelihara",
-              children: [
-                TextSpan(text: " beban keluarga anda"),
-                TextSpan(text: "\ndengan senang hati.")]
-              ),
-              textAlign: TextAlign.center,
+              RichText(
+                textAlign: TextAlign.center,
+                text: TextSpan(
+                  text: "Siap Membantu untuk \nmemelihara",
+                  style: GoogleFonts.manrope(
+                    fontSize: 30,
+                    color: const Color(0xFFDEE1FE),
+                    letterSpacing: 3.5/100,
+                    height: 152/100
+                  ),
+                  children: [
+                    TextSpan(text: " beban keluarga anda",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 30,
+                      fontWeight: FontWeight.w800,
+                    ),
+                    ),
+                    TextSpan(text: " dengan senang hati.")]
+                )
               ),
             ],
           ),
