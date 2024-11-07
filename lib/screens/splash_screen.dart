@@ -19,8 +19,18 @@ class SplashScreen extends StatelessWidget {
         child: SafeArea(
           child: Column(
             children: [
-              SizedBox(height: 30),
-              SvgPicture.asset('assets/svg/logo.svg'),
+              const SizedBox(
+                height: 30
+              ),
+              SvgPicture.asset('assets/svg/logo.svg', width: 300, height: 300,
+              ),
+              const Text.rich(TextSpan(text: "Membantu anda untuk memelihara",
+              children: [
+                TextSpan(text: " beban keluarga anda"),
+                TextSpan(text: "\ndengan senang hati.")]
+              ),
+              textAlign: TextAlign.center,
+              ),
             ],
           ),
         ),
