@@ -34,9 +34,9 @@ class SplashScreen extends StatelessWidget {
           child: Column(
             children: [
               const SizedBox(
-                height: 30
+                height: 20
               ),
-              SvgPicture.asset('assets/svg/logo.svg', width: 300, height: 300,
+              SvgPicture.asset('assets/svg/logo.svg', width: 200, height: 200,
               ),
               RichText(
                 textAlign: TextAlign.center,
