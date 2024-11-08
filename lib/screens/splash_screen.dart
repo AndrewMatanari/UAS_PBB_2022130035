@@ -41,7 +41,7 @@ class SplashScreen extends StatelessWidget {
               RichText(
                 textAlign: TextAlign.center,
                 text: TextSpan(
-                  text: "Siap Membantu untuk \nmemelihara",
+                  text: "Siap melayani untuk \nmemelihara",
                   style: GoogleFonts.manrope(
                     fontSize: 30,
                     color: const Color(0xFFDEE1FE),

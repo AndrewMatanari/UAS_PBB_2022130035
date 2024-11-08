@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 
@@ -45,12 +44,71 @@ class HomeScreen extends StatelessWidget{
                   Image.asset('assets/images/Background-card.png', 
                   fit: BoxFit.cover,
                   width: double.maxFinite,
-                  height: double.maxFinite),
-                ]
-              ),
-            ),
-          );
-  }
+                  height: double.maxFinite
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 22),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+              RichText(
+                text: TextSpan(
+                  text: " (Nama Hewan)",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                  ),
+                  children: [
+                    TextSpan(
+                      text: " akan \nmendapatkan service ",
+                        style: GoogleFonts.manrope(
+                          fontSize: 15,
+                          color: const Color(0xFFDEE1FE),
+                          height: 150/100),
+                        ),
+                    TextSpan(
+                      text: " \n(nama service)",
+                    ),
+                        TextSpan(
+                          text: " (waktu)."
+                          )]
+                    )
+                  ),
+                  const SizedBox(
+                    height: 20
+                    ),
+                    ElevatedButton(
+                      onPressed: () {},
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white.withOpacity(0.4),
+                        foregroundColor: Colors.white,
+                        side: BorderSide(
+                          color: Colors.white.withOpacity(0.12),
+                          width: 2,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                      ),
+                      child: Text(
+                        "See Details",
+                        style: GoogleFonts.manrope(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
+                          ],
+                        ),
+                      )
+                    ]
+                  ),
+                ),
+              );
+      }
 
   Padding _greetings() {
     return Padding(
