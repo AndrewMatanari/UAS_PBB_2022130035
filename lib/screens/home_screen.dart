@@ -2,14 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
-
-var services = [
-  "Day Care",
-  "Walking",
-  "Pet Sitter",
-  "Pet Hotel",
-  "Pet Store",
-];
+import 'package:petcare_mobile/models/employees_model.dart';
+import 'package:petcare_mobile/models/service_model.dart';
 
 var selectedServices = 0;
 
@@ -39,11 +33,77 @@ class HomeScreen extends StatelessWidget{
           const SizedBox(
             height: 20,
           ),
-          _services()
+          _services(),
+          const SizedBox(
+            height: 27,
+            ),
+            _employees(),
           ],
         )
       ),
     );
+  }
+
+  ListView _employees() {
+    return ListView.separated(
+      padding: EdgeInsets.symmetric(horizontal:20),
+            physics: const NeverScrollableScrollPhysics(),
+            shrinkWrap: true,
+            itemBuilder: (context, index) => _employee(employees[index]),
+            separatorBuilder: (context, index) => const SizedBox(
+              height: 11
+            ),
+            itemCount: employees.length);
+  }
+
+  Container _employee(EmployeesModel employeesModel) {
+    return Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFF1E5E5).withOpacity(.22),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+              )],
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  clipBehavior: Clip.hardEdge,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                child: Image.asset(
+                  'assets/images/${employeesModel.image}',
+                width: 88,
+                height: 103,
+                )
+                ),
+                const SizedBox(
+                  width: 20,
+                ),
+                Column(
+                  children: [
+                    Text(employeesModel.name,
+                    style: GoogleFonts.manrope(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF3F3E3F)),
+                      ),
+                    const SizedBox(
+                      height: 7,
+                    ),
+                    RichText(text: TextSpan(
+                      
+                    ))
+                  ],
+                )
+              ],
+            ),
+          );
   }
 
   SizedBox _services() {
@@ -67,7 +127,7 @@ class HomeScreen extends StatelessWidget{
                 borderRadius: BorderRadius.circular(10),
                   ),
               child: Center(
-                child: Text(services [index],
+                child: Text(Service.all() [index],
                   style: GoogleFonts.manrope(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
@@ -80,7 +140,7 @@ class HomeScreen extends StatelessWidget{
             ),
             separatorBuilder: (context, index) => const SizedBox(
               width: 10,),
-              itemCount: services.length,
+              itemCount: Service.all().length,
           ),
         );
   }
