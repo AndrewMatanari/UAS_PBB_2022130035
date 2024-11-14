@@ -38,6 +38,9 @@ class HomeScreen extends StatelessWidget{
             height: 27,
             ),
             _employees(),
+            const SizedBox(
+              height: 20,
+            )
           ],
         )
       ),
