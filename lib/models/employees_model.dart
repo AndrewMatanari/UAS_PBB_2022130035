@@ -20,14 +20,21 @@ var employees = [
   EmployeesModel(
     name: "Dr. Andrew",
     image: "Profile1.png",
-    service: ["PetSitter"],
+    service: [Service.PetSitter],
     phone: "123-456-7890",
     address: "123 Main Street, Anytown, USA",
   ),
   EmployeesModel(
     name: "Dr. Julia",
     image: "Profile2.png",
-    service: ["DayCare"],
+    service: [Service.DayCare],
+    phone: "123-456-7890",
+    address: "123 Main Street, Anytown, USA",
+  ),
+  EmployeesModel(
+    name: "Dr. Michael",
+    image: "Profile3.png",
+    service: [Service.Walking],
     phone: "123-456-7890",
     address: "123 Main Street, Anytown, USA",
   ),
