@@ -89,6 +89,7 @@ class HomeScreen extends StatelessWidget{
                   width: 20,
                 ),
                 Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(employeesModel.name,
                     style: GoogleFonts.manrope(
@@ -100,8 +101,49 @@ class HomeScreen extends StatelessWidget{
                       height: 7,
                     ),
                     RichText(text: TextSpan(
-                      
-                    ))
+                      text: "Service: ${employeesModel.service.join(", ")} ",
+                      style: GoogleFonts.manrope(
+                        fontSize: 12,
+                        color: Colors.black
+                      )
+                      )
+                    ),
+                    const SizedBox(
+                      height: 7,
+                    ),
+                    Row(
+                      children: [
+                        const Icon(
+                          FeatherIcons.phone,
+                          size: 14,
+                          color: Color(0xFFCACACA),
+                        ),
+                        const SizedBox(
+                          width: 7,
+                        ),
+                        Text("${employeesModel.phone}",
+                        style: GoogleFonts.manrope(
+                          fontSize: 12,
+                          color: Colors.black)
+                        )
+                      ]
+                    ),
+                    SizedBox(
+                      height: 7
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color: const Color(0xFF34C759)
+                      ),
+                      child: Text("Bersedia",
+                        style: GoogleFonts.manrope(
+                          fontSize: 12,
+                          color: Colors.white,
+                          height: 150/100
+                        ))
+                    ),
                   ],
                 )
               ],
@@ -213,11 +255,8 @@ class HomeScreen extends StatelessWidget{
                           height: 150/100),
                         ),
                     TextSpan(
-                      text: " \n(nama service)",
-                    ),
-                        TextSpan(
-                          text: " (waktu)."
-                          )]
+                      text: " (waktu)."
+                      )]
                     )
                   ),
                   const SizedBox(
