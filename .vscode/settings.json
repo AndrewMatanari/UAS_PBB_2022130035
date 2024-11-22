@@ -11,5 +11,6 @@
     "jdk.project.jdkhome": "C:/Program Files/AdoptOpenJDK/jdk-23",
     "java.debug.settings.exceptionBreakpoint.skipClasses": [
 
-    ]
+    ],
+    "java.configuration.updateBuildConfiguration": "disabled"
 }

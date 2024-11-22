@@ -4,6 +4,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 import 'package:petcare_mobile/models/employees_model.dart';
 import 'package:petcare_mobile/models/service_model.dart';
+import 'package:petcare_mobile/screens/daycare_screen.dart';
+import 'package:petcare_mobile/screens/notification_screen.dart';
+import 'package:petcare_mobile/screens/profile_screen.dart';
+import 'package:petcare_mobile/screens/reservation_screen.dart';
 
 
 var selectedServices = 0;
@@ -14,41 +18,267 @@ var menus = [FeatherIcons.home,
               ];
 var selectedMenu = 0;
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  int selectedMenu = 0;
 
   @override
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.dark);
 
+    // Daftar halaman
+    final List<Widget> pages = [
+      _homeContent(),  // Halaman utama
+      _reservationsPage(), // Halaman Reservasi
+      _notificationsPage(), // Halaman Notifikasi
+      _profilePage(), // Halaman Profil
+    ];
+
     return Scaffold(
       bottomNavigationBar: _bottomNavigationBar(),
-      body: SafeArea(
-          child: SingleChildScrollView(
-        child: Column(
-          children: [
-            const SizedBox(height: 20),
-            _greetings(),
-            const SizedBox(height: 20),
-            _card(),
-            const SizedBox(height: 20),
-            _search(),
-            const SizedBox(
-              height: 20,
-            ),
-            _services(),
-            const SizedBox(
-              height: 27,
-            ),
-            _employees(),
-            const SizedBox(
-              height: 20,
-            )
-          ],
-        ),
-      )),
+      body: SafeArea(child: pages[selectedMenu]),
     );
   }
+
+  // Konten Halaman Utama
+  Widget _homeContent() {
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          const SizedBox(height: 20),
+          _greetings(),
+          const SizedBox(height: 20),
+          _card(),
+          const SizedBox(height: 20),
+          _search(),
+          const SizedBox(height: 20),
+          Text(
+            'Services',
+            style: GoogleFonts.manrope(
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+          ),
+          const SizedBox(height: 20),
+          _servicesWithImages(),
+          const SizedBox(height: 27),
+          Text(
+            'Dokter',
+            style: GoogleFonts.manrope(
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+          ),
+          const SizedBox(height: 20),
+          _horizontalEmployees(),
+          const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+
+  // Tambahkan konten halaman lainnya
+  Widget _reservationsPage() {
+    return ReservationScreen();
+  }
+
+  Widget _notificationsPage() {
+    return NotificationScreen();
+  }
+
+  Widget _profilePage() {
+    return ProfileScreen();
+  }
+
+  // Perbaikan BottomNavigationBar
+  Widget _bottomNavigationBar() {
+    return Container(
+      height: 76,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFDADADA).withOpacity(0.4),
+            blurRadius: 25,
+            offset: const Offset(0, -10),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: List.generate(
+          menus.length,
+          (index) => GestureDetector(
+            onTap: () {
+              setState(() {
+                selectedMenu = index;
+              });
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeInOut,
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+              decoration: BoxDecoration(
+                color: selectedMenu == index
+                    ? const Color(0xFF818AF9).withOpacity(0.1)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              transform: Matrix4.identity()
+                ..scale(selectedMenu == index ? 1.1 : 1.0),
+              child: Icon(
+                menus[index],
+                color: selectedMenu == index
+                    ? const Color(0xFF818AF9)
+                    : const Color(0xFFCACACA).withOpacity(0.6),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+Widget _servicesWithImages() {
+  return SizedBox(
+    height: 100,
+    child: ListView.separated(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      scrollDirection: Axis.horizontal,
+      itemBuilder: (context, index) {
+        return GestureDetector(
+          onTap: () {
+            // Buka DaycareScreen untuk layanan "Daycare"
+            if (Service.all()[index] == "Daycare") {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const DaycareScreen(),
+                ),
+              );
+            }
+          },
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 70,
+                height: 70,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(35),
+                  color: const Color(0xFFF6F6F6),
+                  border: Border.all(
+                    color: selectedServices == index
+                        ? const Color(0xFF818AF9)
+                        : Colors.transparent,
+                    width: 2,
+                  ),
+                  image: DecorationImage(
+                    image: AssetImage(
+                        'assets/images/service_${index + 1}.png'), // Pastikan path benar
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                Service.all()[index],
+                style: GoogleFonts.manrope(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF3F3E3F),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+      separatorBuilder: (context, index) => const SizedBox(width: 15),
+      itemCount: Service.all().length,
+    ),
+  );
+}
+
+
+   Widget _horizontalEmployees() {
+    return SizedBox(
+      height: 130,
+      child: ListView.separated(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        scrollDirection: Axis.horizontal,
+        itemBuilder: (context, index) {
+          final employee = employees[index];
+          return Container(
+            width: 100,
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFF1E5E5).withOpacity(.22),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
+                )
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  width: 70,
+                  height: 70,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    image: DecorationImage(
+                      image: AssetImage(
+                          'assets/images/${employee.image}'), // Replace with actual employee image paths
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  employee.name,
+                  style: GoogleFonts.manrope(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF3F3E3F),
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  employee.service.join(", "),
+                  style: GoogleFonts.manrope(
+                    fontSize: 10,
+                    color: const Color(0xFFCACACA),
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          );
+        },
+        separatorBuilder: (context, index) => const SizedBox(width: 15),
+        itemCount: employees.length,
+      ),
+    );
+  }
+
   Container _bottomNavigationBar() => Container(
   height: 76,
   decoration: BoxDecoration(
@@ -334,48 +564,21 @@ class HomeScreen extends StatelessWidget {
 
   Padding _greetings() {
     return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Hello, Pelanggan!',
-              style: GoogleFonts.manrope(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 24,
-                  color: const Color(0xFF3F3E3F)),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            'Hello, Pelanggan!',
+            style: GoogleFonts.manrope(
+              fontWeight: FontWeight.w800,
+              fontSize: 24,
+              color: const Color(0xFF3F3E3F),
             ),
-            Stack(children: [
-              IconButton(
-                  onPressed: () {
-                    //logic untuk notifikasi saat pelanggan melakukan reservasi
-                  },
-                  icon: const Icon(
-                    FeatherIcons.shoppingBag,
-                    color: Color(0xFF818AF9),
-                  )),
-              Positioned(
-                right: 4,
-                top: 6,
-                child: Container(
-                  height: 15,
-                  width: 15,
-                  decoration: BoxDecoration(
-                      color: const Color(0xFFEF6497),
-                      borderRadius: BorderRadius.circular(15 / 2)),
-                  child: Center(
-                    child: Text(
-                      "2",
-                      style: GoogleFonts.mPlus1p(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800),
-                    ),
-                  ),
-                ),
-              )
-            ])
-          ],
-        ));
+          ),
+        ],
+      ),
+    );
+    
   }
-}
+

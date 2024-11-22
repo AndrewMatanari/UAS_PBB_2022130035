@@ -5,6 +5,6 @@ class Service{
   static String PetSitter = "Pet Sitter";
 
   static List<String> all(){
-    return [DayCare,Walking,PetSitter];
+    return ["DayCare","Walking","PetSitter"];
   }
 }
