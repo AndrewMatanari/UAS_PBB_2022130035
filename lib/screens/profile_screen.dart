@@ -38,10 +38,9 @@ class ProfileScreen extends StatelessWidget {
             ],
           ),
         ),
-
         child: ListView(
           children: [
-            // Profile picture with shadow and border
+            // Profile picture with smooth shadow and border
             Center(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(75),
@@ -49,8 +48,8 @@ class ProfileScreen extends StatelessWidget {
                   decoration: BoxDecoration(
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 10,
+                        color: Colors.black.withOpacity(0.15),
+                        blurRadius: 15,
                         offset: const Offset(0, 4),
                       ),
                     ],
@@ -65,7 +64,7 @@ class ProfileScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
-            // Profile details inside a Card with rounded corners
+            // Profile details inside a Card with rounded corners and gradient background
             Card(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(15),
@@ -90,55 +89,27 @@ class ProfileScreen extends StatelessWidget {
 
             const SizedBox(height: 30),
 
-            // Edit profile button with elevation and rounded corners
-            ElevatedButton.icon(
+            // Edit profile button with smooth animation, elevation, and rounded corners
+            AnimatedButton(
               onPressed: () {
                 // Navigate to edit profile screen
                 Navigator.pushNamed(context, '/edit-profile');
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF818AF9),
-                padding: const EdgeInsets.symmetric(vertical: 15),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                elevation: 5,
-              ),
-              icon: const Icon(Icons.edit_outlined),
-              label: Text(
-                "Edit Profile",
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
+              label: "Edit Profile",
+              icon: Icons.edit_outlined,
+              backgroundColor: const Color(0xFF818AF9),
             ),
             const SizedBox(height: 20),
 
-            // Log out button with elevation and rounded corners
-            ElevatedButton.icon(
+            // Log out button with smooth animation, elevation, and rounded corners
+            AnimatedButton(
               onPressed: () {
                 // Logic for logout
                 _logout(context);
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                padding: const EdgeInsets.symmetric(vertical: 15),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                elevation: 5,
-              ),
-              icon: const Icon(Icons.logout),
-              label: Text(
-                "Log Out",
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
+              label: "Log Out",
+              icon: Icons.logout,
+              backgroundColor: Colors.red,
             ),
           ],
         ),
@@ -188,3 +159,42 @@ class ProfileScreen extends StatelessWidget {
   }
 }
 
+// Custom animated button widget for edit and logout
+class AnimatedButton extends StatelessWidget {
+  final VoidCallback onPressed;
+  final String label;
+  final IconData icon;
+  final Color backgroundColor;
+
+  const AnimatedButton({
+    required this.onPressed,
+    required this.label,
+    required this.icon,
+    required this.backgroundColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton.icon(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: backgroundColor,
+        padding: const EdgeInsets.symmetric(vertical: 15),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        elevation: 5,
+        shadowColor: Colors.black.withOpacity(0.15),
+      ),
+      icon: Icon(icon),
+      label: Text(
+        label,
+        style: GoogleFonts.poppins(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+}

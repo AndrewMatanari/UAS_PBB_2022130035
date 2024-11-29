@@ -5,6 +5,7 @@ import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 import 'package:petcare_mobile/models/employees_model.dart';
 import 'package:petcare_mobile/models/service_model.dart';
 import 'package:petcare_mobile/screens/daycare_screen.dart';
+import 'package:petcare_mobile/screens/detaildokter_screen.dart';
 import 'package:petcare_mobile/screens/notification_screen.dart';
 import 'package:petcare_mobile/screens/profile_screen.dart';
 import 'package:petcare_mobile/screens/reservation_screen.dart';
@@ -209,15 +210,28 @@ Widget _servicesWithImages() {
 }
 
 
-   Widget _horizontalEmployees() {
-    return SizedBox(
-      height: 130,
-      child: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        scrollDirection: Axis.horizontal,
-        itemBuilder: (context, index) {
-          final employee = employees[index];
-          return Container(
+Widget _horizontalEmployees() {
+  return SizedBox(
+    height: 130,
+    child: ListView.separated(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      scrollDirection: Axis.horizontal,
+      itemBuilder: (context, index) {
+        final employee = employees[index];
+        return GestureDetector(
+          onTap: () {
+            // Pass the employee details to DetailDokterScreen
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => DetailDokterScreen(
+                  doctor: employee,  // Pass the employee (doctor)
+                  pets: [], // You can pass the actual pets list here
+                ),
+              ),
+            );
+          },
+          child: Container(
             width: 100,
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
@@ -228,7 +242,7 @@ Widget _servicesWithImages() {
                   color: const Color(0xFFF1E5E5).withOpacity(.22),
                   blurRadius: 10,
                   offset: const Offset(0, 5),
-                )
+                ),
               ],
             ),
             child: Column(
@@ -240,8 +254,7 @@ Widget _servicesWithImages() {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(8),
                     image: DecorationImage(
-                      image: AssetImage(
-                          'assets/images/${employee.image}'), // Replace with actual employee image paths
+                      image: AssetImage('assets/images/${employee.image}'), 
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -271,14 +284,14 @@ Widget _servicesWithImages() {
                 ),
               ],
             ),
-          );
-        },
-        separatorBuilder: (context, index) => const SizedBox(width: 15),
-        itemCount: employees.length,
-      ),
-    );
-  }
-
+          ),
+        );
+      },
+      separatorBuilder: (context, index) => const SizedBox(width: 15),
+      itemCount: employees.length,
+    ),
+  );
+}
   Container _bottomNavigationBar() => Container(
   height: 76,
   decoration: BoxDecoration(
