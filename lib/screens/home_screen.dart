@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 import 'package:petcare_mobile/models/employees_model.dart';
@@ -576,13 +577,14 @@ Widget _horizontalEmployees() {
   }
 
   Padding _greetings() {
+    final user = FirebaseAuth.instance.currentUser;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            'Hello, Pelanggan!',
+            'Hello, ${user?.displayName}!',
             style: GoogleFonts.manrope(
               fontWeight: FontWeight.w800,
               fontSize: 24,
@@ -592,6 +594,5 @@ Widget _horizontalEmployees() {
         ],
       ),
     );
-    
   }
 

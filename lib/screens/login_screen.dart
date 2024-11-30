@@ -4,11 +4,21 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:petcare_mobile/screens/home_screen.dart'; // Import HomeScreen
-import 'package:petcare_mobile/screens/signup_screen.dart';
+import 'home_screen.dart'; // Ganti dengan jalur file HomeScreen Anda
+import 'signup_screen.dart'; // Ganti dengan jalur file SignupScreen Anda
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -19,42 +29,47 @@ class LoginScreen extends StatelessWidget {
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SvgPicture.asset(
-                  'assets/svg/logo.svg',
-                  width: 150,
-                  height: 150,
-                ),
-                const SizedBox(height: 40),
-                Text(
-                  'Welcome Back!',
-                  style: GoogleFonts.manrope(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 28,
-                    color: const Color(0xFF3F3E3F),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SvgPicture.asset(
+                    'assets/svg/logo.svg',
+                    width: 150,
+                    height: 150,
                   ),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  'Please log in to your account',
-                  style: GoogleFonts.manrope(
-                    fontSize: 16,
-                    color: const Color(0xFF3F3E3F),
+                  const SizedBox(height: 40),
+                  Text(
+                    'Welcome Back!',
+                    style: GoogleFonts.manrope(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 28,
+                      color: const Color(0xFF3F3E3F),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 40),
-                _buildEmailField(),
-                const SizedBox(height: 20),
-                _buildPasswordField(),
-                const SizedBox(height: 20),
-                _buildLoginButton(context),
-                const SizedBox(height: 20),
-                _buildGoogleLoginButton(context),
-                const SizedBox(height: 20),
-                _buildSignUpLink(context),
-              ],
+                  const SizedBox(height: 20),
+                  Text(
+                    'Please log in to your account',
+                    style: GoogleFonts.manrope(
+                      fontSize: 16,
+                      color: const Color(0xFF3F3E3F),
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+                  _buildEmailField(),
+                  const SizedBox(height: 20),
+                  _buildPasswordField(),
+                  const SizedBox(height: 20),
+                  _isLoading
+                      ? const CircularProgressIndicator()
+                      : _buildLoginButton(context),
+                  const SizedBox(height: 20),
+                  _buildGoogleLoginButton(context),
+                  const SizedBox(height: 20),
+                  _buildSignUpLink(context),
+                ],
+              ),
             ),
           ),
         ),
@@ -63,33 +78,75 @@ class LoginScreen extends StatelessWidget {
   }
 
   Widget _buildEmailField() {
-    return TextField(
+    return TextFormField(
+      controller: _emailController,
+      keyboardType: TextInputType.emailAddress,
       decoration: InputDecoration(
         labelText: 'Email',
-        border: OutlineInputBorder(),
+        border: const OutlineInputBorder(),
         hintText: 'Enter your email',
         prefixIcon: const Icon(Icons.email),
       ),
-      keyboardType: TextInputType.emailAddress,
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Please enter your email';
+        }
+        if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+          return 'Please enter a valid email';
+        }
+        return null;
+      },
     );
   }
 
   Widget _buildPasswordField() {
-    return TextField(
+    return TextFormField(
+      controller: _passwordController,
       obscureText: true,
       decoration: InputDecoration(
         labelText: 'Password',
-        border: OutlineInputBorder(),
+        border: const OutlineInputBorder(),
         hintText: 'Enter your password',
         prefixIcon: const Icon(Icons.lock),
       ),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Please enter your password';
+        }
+        if (value.length < 6) {
+          return 'Password must be at least 6 characters';
+        }
+        return null;
+      },
     );
   }
 
   Widget _buildLoginButton(BuildContext context) {
     return ElevatedButton(
-      onPressed: () {
-        // Logic untuk login dengan email dan password
+      onPressed: () async {
+        if (_formKey.currentState!.validate()) {
+          setState(() {
+            _isLoading = true;
+          });
+
+          try {
+            await FirebaseAuth.instance.signInWithEmailAndPassword(
+              email: _emailController.text.trim(),
+              password: _passwordController.text.trim(),
+            );
+
+            // Navigasi ke HomeScreen setelah login berhasil
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) =>  HomeScreen()),
+            );
+          } catch (e) {
+            _showErrorDialog(context, 'Login failed: ${e.toString()}');
+          } finally {
+            setState(() {
+              _isLoading = false;
+            });
+          }
+        }
       },
       style: ElevatedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 40),
@@ -111,8 +168,30 @@ class LoginScreen extends StatelessWidget {
 
   Widget _buildGoogleLoginButton(BuildContext context) {
     return ElevatedButton.icon(
-      onPressed: () {
-        signInWithGoogle(context);
+      onPressed: () async {
+        try {
+          final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+          if (googleUser == null) {
+            return; // Pengguna membatalkan login
+          }
+
+          final GoogleSignInAuthentication googleAuth =
+              await googleUser.authentication;
+
+          final AuthCredential credential = GoogleAuthProvider.credential(
+            accessToken: googleAuth.accessToken,
+            idToken: googleAuth.idToken,
+          );
+
+          await FirebaseAuth.instance.signInWithCredential(credential);
+
+          // Navigasi ke HomeScreen setelah login berhasil
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) =>  HomeScreen()),
+          );
+        } catch (e) {
+          _showErrorDialog(context, 'Google login failed: ${e.toString()}');
+        }
       },
       style: ElevatedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 40),
@@ -137,30 +216,6 @@ class LoginScreen extends StatelessWidget {
     );
   }
 
-  Future<void> signInWithGoogle(BuildContext context) async {
-    try {
-      final GoogleSignInAccount? googleUser  = await GoogleSignIn().signIn();
-      final GoogleSignInAuthentication? googleAuth = await googleUser ?.authentication;
-
-      if (googleAuth != null) {
-        final AuthCredential credential = GoogleAuthProvider.credential(
-          accessToken: googleAuth.accessToken,
-          idToken: googleAuth.idToken,
-        );
-
-        UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
-        print(userCredential.user?.displayName);
-        
-        // Navigasi ke HomeScreen setelah login berhasil
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => HomeScreen()),
-        );
-      }
-    } catch (error) {
-      print(error); // Anda bisa menampilkan pesan kesalahan di UI
-    }
-  }
-
   Widget _buildSignUpLink(BuildContext context) {
     return GestureDetector(
       onTap: () {
@@ -176,6 +231,24 @@ class LoginScreen extends StatelessWidget {
           fontSize: 14,
           color: const Color(0xFF818AF9),
         ),
+      ),
+    );
+  }
+
+  void _showErrorDialog(BuildContext context, String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Error'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: const Text('OK'),
+          ),
+        ],
       ),
     );
   }

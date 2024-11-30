@@ -1,15 +1,15 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 
 class ProfileScreen extends StatelessWidget {
   ProfileScreen({super.key});
 
-  // Mock user profile data
-  final String userName = "John Doe";
-  final String userEmail = "john.doe@example.com";
-  final String userPhone = "+1 234 567 890";
-  final String userAddress = "1234 Main St, Springfield, IL";
-  final String userProfilePhotoUrl = "https://via.placeholder.com/150"; // Example URL for profile photo
+  // Get user profile data from Firebase
+  final String userName = FirebaseAuth.instance.currentUser!.displayName ?? '';
+  final String userEmail = FirebaseAuth.instance.currentUser!.email ?? '';
+  final String userProfilePhotoUrl = FirebaseAuth.instance.currentUser!.photoURL ?? '';
 
   @override
   Widget build(BuildContext context) {
@@ -78,10 +78,6 @@ class ProfileScreen extends StatelessWidget {
                     _buildProfileDetail(title: "Name", value: userName),
                     const SizedBox(height: 12),
                     _buildProfileDetail(title: "Email", value: userEmail),
-                    const SizedBox(height: 12),
-                    _buildProfileDetail(title: "Phone Number", value: userPhone),
-                    const SizedBox(height: 12),
-                    _buildProfileDetail(title: "Address", value: userAddress),
                   ],
                 ),
               ),
@@ -104,7 +100,7 @@ class ProfileScreen extends StatelessWidget {
             // Log out button with smooth animation, elevation, and rounded corners
             AnimatedButton(
               onPressed: () {
-                // Logic for logout
+                // Perform logout logic here (e.g., clearing session, navigating to login screen)
                 _logout(context);
               },
               label: "Log Out",
@@ -145,17 +141,10 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  // Mock logout function
-  void _logout(BuildContext context) {
-    // Perform logout logic here (e.g., clearing session, navigating to login screen)
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Logged out successfully!"),
-      ),
-    );
-
-    // Navigate to login screen or home screen
-    // Navigator.pushReplacementNamed(context, '/login'); // Example navigation
+  // Function to handle logout and navigate to login screen
+  void _logout(BuildContext context) async {
+    await FirebaseAuth.instance.signOut();
+    Navigator.of(context).pushReplacementNamed('/login'); // Navigate to login
   }
 }
 
@@ -198,3 +187,4 @@ class AnimatedButton extends StatelessWidget {
     );
   }
 }
+

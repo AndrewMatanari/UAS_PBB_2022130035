@@ -19,7 +19,9 @@ class DetailDokterScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(
           'Doctor Details',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+          style: GoogleFonts.poppins(
+            color: Colors.white,
+            fontWeight: FontWeight.bold),
         ),
         backgroundColor: Color(0xFF3F47D0),
         leading: IconButton(
