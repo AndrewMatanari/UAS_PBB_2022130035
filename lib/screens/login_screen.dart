@@ -1,11 +1,12 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'home_screen.dart'; // Ganti dengan jalur file HomeScreen Anda
-import 'signup_screen.dart'; // Ganti dengan jalur file SignupScreen Anda
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'home_screen.dart';
+import 'register_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -19,6 +20,80 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
+  String errorMessage = '';
+
+  Future<void> loginUser() async {
+    final String email = _emailController.text.trim();
+    final String password = _passwordController.text.trim();
+
+    // Validasi form di sisi aplikasi
+    if (email.isEmpty || password.isEmpty) {
+      setState(() {
+        errorMessage = 'Please fill in all fields.';
+      });
+      print('Error: Please fill in all fields.'); // Log error to terminal
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      errorMessage = ''; // Reset error message
+    });
+
+    final url = Uri.parse('https://petcare.mahasiswarandom.my.id/api/login'); // URL API Laravel untuk login
+    try {
+      final response = await http.post(
+        url,
+        body: {
+          'email': email,
+          'password': password,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        // Memastikan respons memiliki 'token'
+        if (data['token'] != null) {
+          final token = data['token'];
+
+          // Simpan token menggunakan SharedPreferences
+          final prefs = await SharedPreferences.getInstance();
+          prefs.setString('auth_token', token);
+
+          // Navigasi ke HomeScreen setelah login berhasil
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) =>HomeScreen()), // Ganti HomeScreen sesuai dengan implementasi Anda
+          );
+        } else {
+          setState(() {
+            errorMessage = 'Token not found, please try again.';
+          });
+          print('Error: Token not found'); // Log error to terminal
+        }
+      } else if (response.statusCode == 401) {
+        // Status code 401 - Unauthorized
+        setState(() {
+          errorMessage = 'Invalid credentials, please check your email and password.';
+        });
+        print('Error: Invalid credentials (401)'); // Log error to terminal
+      } else {
+        setState(() {
+          errorMessage = 'An unexpected error occurred. Please try again later.';
+        });
+        print('Error: Unexpected error occurred, Status Code: ${response.statusCode}'); // Log error to terminal
+      }
+    } catch (e) {
+      setState(() {
+        errorMessage = 'An error occurred: $e';
+      });
+      print('Error: $e'); // Log error to terminal
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +140,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       ? const CircularProgressIndicator()
                       : _buildLoginButton(context),
                   const SizedBox(height: 20),
-                  _buildGoogleLoginButton(context),
+                  if (errorMessage.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 20),
+                      child: Text(
+                        errorMessage,
+                        style: TextStyle(color: Colors.red),
+                      ),
+                    ),
                   const SizedBox(height: 20),
                   _buildSignUpLink(context),
                 ],
@@ -123,31 +205,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Widget _buildLoginButton(BuildContext context) {
     return ElevatedButton(
-      onPressed: () async {
-        if (_formKey.currentState!.validate()) {
-          setState(() {
-            _isLoading = true;
-          });
-
-          try {
-            await FirebaseAuth.instance.signInWithEmailAndPassword(
-              email: _emailController.text.trim(),
-              password: _passwordController.text.trim(),
-            );
-
-            // Navigasi ke HomeScreen setelah login berhasil
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) =>  HomeScreen()),
-            );
-          } catch (e) {
-            _showErrorDialog(context, 'Login failed: ${e.toString()}');
-          } finally {
-            setState(() {
-              _isLoading = false;
-            });
-          }
-        }
-      },
+      onPressed: loginUser,
       style: ElevatedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 40),
         backgroundColor: const Color(0xFF818AF9),
@@ -166,62 +224,12 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildGoogleLoginButton(BuildContext context) {
-    return ElevatedButton.icon(
-      onPressed: () async {
-        try {
-          final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-          if (googleUser == null) {
-            return; // Pengguna membatalkan login
-          }
-
-          final GoogleSignInAuthentication googleAuth =
-              await googleUser.authentication;
-
-          final AuthCredential credential = GoogleAuthProvider.credential(
-            accessToken: googleAuth.accessToken,
-            idToken: googleAuth.idToken,
-          );
-
-          await FirebaseAuth.instance.signInWithCredential(credential);
-
-          // Navigasi ke HomeScreen setelah login berhasil
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) =>  HomeScreen()),
-          );
-        } catch (e) {
-          _showErrorDialog(context, 'Google login failed: ${e.toString()}');
-        }
-      },
-      style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 40),
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-          side: const BorderSide(color: Color(0xFF818AF9)),
-        ),
-      ),
-      icon: Image.asset(
-        'assets/images/Google.png',
-        height: 24,
-      ),
-      label: Text(
-        'Login with Google',
-        style: GoogleFonts.manrope(
-          fontWeight: FontWeight.bold,
-          fontSize: 16,
-          color: const Color(0xFF818AF9),
-        ),
-      ),
-    );
-  }
-
   Widget _buildSignUpLink(BuildContext context) {
     return GestureDetector(
       onTap: () {
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (context) => const SignupScreen(),
+            builder: (context) => const RegisterScreen(),
           ),
         );
       },
@@ -231,24 +239,6 @@ class _LoginScreenState extends State<LoginScreen> {
           fontSize: 14,
           color: const Color(0xFF818AF9),
         ),
-      ),
-    );
-  }
-
-  void _showErrorDialog(BuildContext context, String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Error'),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: const Text('OK'),
-          ),
-        ],
       ),
     );
   }

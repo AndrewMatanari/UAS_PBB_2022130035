@@ -14,7 +14,7 @@ class SplashScreen extends StatelessWidget {
     Future.delayed(const Duration(seconds: 3)).then((value) {
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(
-          builder: (context) => const LoginScreen(), // Ganti HomeScreen dengan LoginScreen
+          builder: (context) => LoginScreen(), // Ganti HomeScreen dengan LoginScreen
         ),
         (route) => false,
       );

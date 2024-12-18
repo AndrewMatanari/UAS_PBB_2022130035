@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:petcare_mobile/screens/splash_screen.dart';
 import 'package:petcare_mobile/screens/login_screen.dart';
 import 'package:petcare_mobile/screens/profile_screen.dart';
+import 'package:petcare_mobile/screens/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,7 +14,6 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -22,13 +22,12 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      initialRoute: '/profile',
+      home: const SplashScreen(), // Mulai dari SplashScreen
       routes: {
-        '/login': (context) => const LoginScreen(),
-        '/profile': (context) => ProfileScreen(),
+        '/login': (context) =>  LoginScreen(),
+        '/profile': (context) =>  ProfileScreen(),
       },
       debugShowCheckedModeBanner: false,
-      home: const SplashScreen(),
     );
   }
 }
