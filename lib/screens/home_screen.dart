@@ -6,6 +6,7 @@ import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 import 'package:petcare_mobile/models/employees_model.dart';
 import 'package:petcare_mobile/models/service_model.dart';
 import 'package:http/http.dart' as http;
+import 'package:petcare_mobile/screens/reservation_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   HomeScreen({super.key});
@@ -17,7 +18,8 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int selectedServices = 0;
   int selectedMenu = 0;
-  String username = 'Pelanggan'; // Default username if the API call fails or is empty
+  String? name;
+  int userId = 0;
 
   var menus = [
     FeatherIcons.home,
@@ -26,14 +28,30 @@ class _HomeScreenState extends State<HomeScreen> {
     FeatherIcons.user
   ];
 
-  int userId = 10;  // Placeholder user ID. You should replace this with the actual user ID of the logged-in user.
-
   @override
   void initState() {
     super.initState();
-    _getUsernameFromAPI(userId);  // Fetch the username using the userId
+    _getLatestUserIdFromAPI();  // Fetch the latest userId from the API
   }
 
+  // Fetch the latest userId from the API
+  Future<void> _getLatestUserIdFromAPI() async {
+    final response = await http.get(Uri.parse('https://petcare.mahasiswarandom.my.id/api/data-users'));
+
+    if (response.statusCode == 200) {
+      var data = json.decode(response.body);
+      // Find the latest userId from the response
+      var latestUser = data.last;
+      setState(() {
+        userId = latestUser['id']; // Update the userId with the latest value
+      });
+      _getUsernameFromAPI(userId);  // Fetch the username using the latest userId
+    } else {
+      print('Failed to load user data');
+    }
+  }
+
+  // Fetch username from the API based on the userId
   Future<void> _getUsernameFromAPI(int id) async {
     final response = await http.get(Uri.parse('https://petcare.mahasiswarandom.my.id/api/data-users'));
 
@@ -44,7 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
       if (user != null) {
         setState(() {
-          username = user['name']; // Update the username with the fetched value
+          name = user['name']; // Update the username with the fetched value
         });
       } else {
         print('User not found');
@@ -82,7 +100,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Container _bottomNavigationBar() {
+  // Method for bottom navigation bar
+Container _bottomNavigationBar() {
     return Container(
       height: 76,
       decoration: BoxDecoration(
@@ -105,6 +124,15 @@ class _HomeScreenState extends State<HomeScreen> {
               setState(() {
                 selectedMenu = index;
               });
+
+              // If the fileText icon is pressed (index 1)
+              if (index == 1) {
+                // Navigate to ReservationScreen
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ReservationScreen()),
+                );
+              }
             },
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 250),
@@ -129,6 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
 
   ListView _employees() {
     return ListView.separated(
@@ -281,7 +310,7 @@ class _HomeScreenState extends State<HomeScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            'Hello, $username!',
+            'Hello, $name!',
             style: GoogleFonts.manrope(
                 fontWeight: FontWeight.w800,
                 fontSize: 24,
@@ -296,3 +325,4 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(); // Add card widget if needed.
   }
 }
+

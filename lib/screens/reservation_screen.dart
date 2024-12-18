@@ -1,46 +1,66 @@
+import 'dart:convert';
+import 'dart:async'; // Import the timer class for real-time updates
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
 
-class ReservationScreen extends StatelessWidget {
+class ReservationScreen extends StatefulWidget {
   ReservationScreen({super.key});
 
-  final List<Map<String, dynamic>> reservations = [
-    {
-      "doctor": "Dr. Alice",
-      "petName": "Buddy",
-      "service": "Daycare",
-      "amount": 50,
-      "reservationDate": "2024-11-22",
-      "pickupDate": "2024-11-23",
-      "notes": "Ensure Buddy gets extra treats!"
-    },
-    {
-      "doctor": "Dr. Bob",
-      "petName": "Max",
-      "service": "Walking",
-      "amount": 30,
-      "reservationDate": "2024-11-25",
-      "pickupDate": "2024-11-25",
-      "notes": "Walk in the park for 45 minutes."
-    },
-    {
-      "doctor": "Dr. Clara",
-      "petName": "Luna",
-      "service": "Pet Sitting",
-      "amount": 100,
-      "reservationDate": "2024-11-29",
-      "pickupDate": "2024-12-01",
-      "notes": "Feed Luna twice daily."
-    },
-  ];
+  // Define the API URL to fetch all reservations
+  final String apiUrl = 'https://petcare.mahasiswarandom.my.id/api/data-reservations';
+
+  @override
+  State<ReservationScreen> createState() => _ReservationScreenState();
+}
+
+class _ReservationScreenState extends State<ReservationScreen> {
+  List<Map<String, dynamic>> _reservations = []; // Use a list to store multiple reservations
+  late Timer _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchReservationData();
+    _startPolling(); // Start polling for real-time updates
+  }
+
+  // Function to fetch the reservation data from the API
+  Future<void> _fetchReservationData() async {
+    final response = await http.get(Uri.parse(widget.apiUrl));
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      setState(() {
+        _reservations = List<Map<String, dynamic>>.from(data); // Parse response as a list of reservations
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${response.statusCode}')),
+      );
+    }
+  }
+
+  // Function to start polling the API for updates every 10 seconds
+  void _startPolling() {
+    _timer = Timer.periodic(Duration(seconds: 10), (Timer t) {
+      _fetchReservationData(); // Re-fetch reservation data every 10 seconds
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel(); // Cancel the polling when the screen is disposed
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          "Reservations",
+          "Reservations List",
           style: GoogleFonts.poppins(
             fontSize: 22,
             fontWeight: FontWeight.bold,
@@ -51,72 +71,78 @@ class ReservationScreen extends StatelessWidget {
         elevation: 0,
         centerTitle: true,
       ),
-      body: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        itemCount: reservations.length,
-        separatorBuilder: (context, index) => const SizedBox(height: 20),
-        itemBuilder: (context, index) {
-          final reservation = reservations[index];
-          return Card(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+      body: _reservations.isEmpty
+          ? Center(child: CircularProgressIndicator()) // Show loading indicator while data is fetched
+          : ListView.builder(
+              itemCount: _reservations.length,
+              itemBuilder: (context, index) {
+                final reservation = _reservations[index];
+                return Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  elevation: 6,
+                  shadowColor: Colors.grey.withOpacity(0.3),
+                  color: Colors.white,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _infoRow(
+                          icon: FeatherIcons.user,
+                          title: "Customer",
+                          value: reservation["customer"]?["name"] ?? "No customer name",
+                        ),
+                        const SizedBox(height: 12),
+                        _infoRow(
+                          icon: FeatherIcons.tag,
+                          title: "Pet",
+                          value: reservation["pet"]?["name"] ?? "Unknown Pet",
+                        ),
+                        const SizedBox(height: 12),
+                        _infoRow(
+                          icon: FeatherIcons.briefcase,
+                          title: "Service",
+                          value: reservation["service"]?["name"] ?? "No service",
+                        ),
+                        const SizedBox(height: 12),
+                        _infoRow(
+                          icon: FeatherIcons.dollarSign,
+                          title: "Amount",
+                          value: "Rp ${reservation["amount"] ?? "0"}",
+                          textColor: Colors.green,
+                        ),
+                        const SizedBox(height: 12),
+                        _infoRow(
+                          icon: FeatherIcons.calendar,
+                          title: "Reservation Date",
+                          value: reservation["reservation_date"] ?? "No date",
+                        ),
+                        const SizedBox(height: 12),
+                        _infoRow(
+                          icon: FeatherIcons.calendar,
+                          title: "Pickup Date",
+                          value: reservation["pickup_date"] ?? "No date",
+                        ),
+                        const SizedBox(height: 12),
+                        _infoRow(
+                          icon: FeatherIcons.fileText,
+                          title: "Notes",
+                          value: reservation["notes"] ?? "No notes provided",
+                        ),
+                        const SizedBox(height: 12),
+                        _infoRow(
+                          icon: FeatherIcons.user,
+                          title: "Employee",
+                          value: reservation["employee"]?["name"] ?? "No employee assigned",
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
-            elevation: 6,
-            shadowColor: Colors.grey.withOpacity(0.3),
-            color: Colors.white,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _infoRow(
-                    icon: FeatherIcons.user,
-                    title: "Doctor",
-                    value: reservation["doctor"] ?? "No doctor assigned",
-                  ),
-                  const SizedBox(height: 12),
-                  _infoRow(
-                    icon: FeatherIcons.mapPin,
-                    title: "Pet",
-                    value: reservation["petName"] ?? "Unknown Pet",
-                  ),
-                  const SizedBox(height: 12),
-                  _infoRow(
-                    icon: FeatherIcons.briefcase,
-                    title: "Service",
-                    value: reservation["service"] ?? "No service",
-                  ),
-                  const SizedBox(height: 12),
-                  _infoRow(
-                    icon: FeatherIcons.dollarSign,
-                    title: "Amount",
-                    value: "\$${reservation["amount"] ?? 0}",
-                    textColor: Colors.green,
-                  ),
-                  const SizedBox(height: 12),
-                  _infoRow(
-                    icon: FeatherIcons.calendar,
-                    title: "Reservation Date",
-                    value: reservation["reservationDate"] ?? "No date",
-                  ),
-                  const SizedBox(height: 12),
-                  _infoRow(
-                    icon: FeatherIcons.calendar,
-                    title: "Pickup Date",
-                    value: reservation["pickupDate"] ?? "No date",
-                  ),
-                  const SizedBox(height: 12),
-                  _infoRow(
-                    icon: FeatherIcons.fileText,
-                    title: "Notes",
-                    value: reservation["notes"] ?? "No notes provided",
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
     );
   }
 
