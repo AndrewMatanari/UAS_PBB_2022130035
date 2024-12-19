@@ -72,7 +72,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           // Setelah berhasil registrasi, langsung ke halaman login
           Future.delayed(const Duration(seconds: 1), () {
             Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => const LoginScreen()),
+              MaterialPageRoute(builder: (context) =>  LoginScreen()),
             );
           });
         } else {

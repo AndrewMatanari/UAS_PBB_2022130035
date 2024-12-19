@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'PetCare App',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
@@ -26,6 +26,8 @@ class MyApp extends StatelessWidget {
       routes: {
         '/login': (context) =>  LoginScreen(),
         '/profile': (context) =>  ProfileScreen(),
+        '/home': (context) =>  HomeScreen(),
+        
       },
       debugShowCheckedModeBanner: false,
     );

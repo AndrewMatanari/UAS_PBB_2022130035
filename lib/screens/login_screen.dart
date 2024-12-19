@@ -31,7 +31,6 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() {
         errorMessage = 'Please fill in all fields.';
       });
-      print('Error: Please fill in all fields.'); // Log error to terminal
       return;
     }
 
@@ -57,37 +56,45 @@ class _LoginScreenState extends State<LoginScreen> {
         if (data['token'] != null) {
           final token = data['token'];
 
-          // Simpan token menggunakan SharedPreferences
-          final prefs = await SharedPreferences.getInstance();
-          prefs.setString('auth_token', token);
+          // Memastikan respons memiliki user data
+          if (data['user'] != null) {
+            final user = data['user'];
+            final userId = user['id'];
+            final userName = user['name'];
 
-          // Navigasi ke HomeScreen setelah login berhasil
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => HomeScreen()), // Ganti HomeScreen sesuai dengan implementasi Anda
-          );
+            // Simpan token dan userId ke SharedPreferences
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setString('auth_token', token); // Store token
+            await prefs.setInt('userId', userId); // Store userId
+            await prefs.setString('userName', userName); // Store userName
+
+            // Navigasi ke HomeScreen setelah login berhasil
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => HomeScreen()),
+            );
+          } else {
+            setState(() {
+              errorMessage = 'User data not found, please try again.';
+            });
+          }
         } else {
           setState(() {
             errorMessage = 'Token not found, please try again.';
           });
-          print('Error: Token not found'); // Log error to terminal
         }
       } else if (response.statusCode == 401) {
-        // Status code 401 - Unauthorized
         setState(() {
           errorMessage = 'Invalid credentials, please check your email and password.';
         });
-        print('Error: Invalid credentials (401)'); // Log error to terminal
       } else {
         setState(() {
           errorMessage = 'An unexpected error occurred. Please try again later.';
         });
-        print('Error: Unexpected error occurred, Status Code: ${response.statusCode}'); // Log error to terminal
       }
     } catch (e) {
       setState(() {
         errorMessage = 'An error occurred: $e';
       });
-      print('Error: $e'); // Log error to terminal
     } finally {
       setState(() {
         _isLoading = false;

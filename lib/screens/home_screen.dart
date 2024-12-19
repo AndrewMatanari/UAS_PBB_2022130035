@@ -7,6 +7,8 @@ import 'package:petcare_mobile/models/employees_model.dart';
 import 'package:petcare_mobile/models/service_model.dart';
 import 'package:http/http.dart' as http;
 import 'package:petcare_mobile/screens/reservation_screen.dart';
+import 'package:petcare_mobile/screens/buatreservasi_screen.dart';
+
 
 class HomeScreen extends StatefulWidget {
   HomeScreen({super.key});
@@ -385,10 +387,12 @@ Container _employee(EmployeeModel employee) {
   ElevatedButton _createReservationButton() {
     return ElevatedButton(
       onPressed: () {
-        // Implement your reservation logic
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => CreateReservationScreen()),
+        );
       },
       child: const Text('Create Reservation'),
     );
   }
 }
-
