@@ -1,41 +1,17 @@
-import 'package:petcare_mobile/models/service_model.dart';
+class EmployeeModel {
+  final int id;
+  final String name;
+  final String phone;
+  final String photo;
 
-class EmployeesModel {
-  String name;
-  String image;
-  List<String> service;
-  String phone;
-  String address;
+  EmployeeModel({required this.id, required this.name, required this.phone, required this.photo});
 
-  EmployeesModel({
-    required this.name,
-    required this.image,
-    required this.service,
-    required this.phone,
-    required this.address,
-  });
+  factory EmployeeModel.fromJson(Map<String, dynamic> json) {
+    return EmployeeModel(
+      id: json['id'],
+      name: json['name'],
+      phone: json['phone'],
+      photo: json['photo'], 
+    );
+  }
 }
-
-var employees = [
-  EmployeesModel(
-    name: "Dr. Andrew",
-    image: "Profile1.png",
-    service: [Service.PetSitter],
-    phone: "123-456-7890",
-    address: "123 Main Street, Anytown, USA",
-  ),
-  EmployeesModel(
-    name: "Dr. Julia",
-    image: "Profile2.png",
-    service: [Service.DayCare],
-    phone: "123-456-7890",
-    address: "123 Main Street, Anytown, USA",
-  ),
-  EmployeesModel(
-    name: "Dr. Michael",
-    image: "Profile3.png",
-    service: [Service.Walking],
-    phone: "123-456-7890",
-    address: "123 Main Street, Anytown, USA",
-  ),
-];

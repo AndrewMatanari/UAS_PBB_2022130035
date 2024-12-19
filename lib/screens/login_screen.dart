@@ -63,7 +63,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
           // Navigasi ke HomeScreen setelah login berhasil
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) =>HomeScreen()), // Ganti HomeScreen sesuai dengan implementasi Anda
+            MaterialPageRoute(builder: (context) => HomeScreen()), // Ganti HomeScreen sesuai dengan implementasi Anda
           );
         } else {
           setState(() {

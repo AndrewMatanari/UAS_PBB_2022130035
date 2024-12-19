@@ -1,10 +1,23 @@
+class ServiceModel {
+  final int id;
+  final String name;
+  final String description;
+  final String price;
 
-class Service{
-  static String DayCare = "Day Care";
-  static String Walking = "Walking";
-  static String PetSitter = "Pet Sitter";
+  ServiceModel({
+    required this.id,
+    required this.name,
+    required this.description,
+    required this.price,
+  });
 
-  static List<String> all(){
-    return ["DayCare","Walking","PetSitter"];
+  // Factory constructor untuk membuat objek dari JSON
+  factory ServiceModel.fromJson(Map<String, dynamic> json) {
+    return ServiceModel(
+      id: json['id'],
+      name: json['name'],
+      description: json['description'],
+      price: json['price'],
+    );
   }
 }

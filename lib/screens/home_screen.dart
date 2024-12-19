@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:petcare_mobile/models/employees_model.dart';
 import 'package:petcare_mobile/models/service_model.dart';
 import 'package:http/http.dart' as http;
@@ -20,6 +20,10 @@ class _HomeScreenState extends State<HomeScreen> {
   int selectedMenu = 0;
   String? name;
   int userId = 0;
+  Map<String, dynamic>? lastReservation;
+
+  List<EmployeeModel> employees = [];
+  List<ServiceModel> services = [];
 
   var menus = [
     FeatherIcons.home,
@@ -31,44 +35,76 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _getLatestUserIdFromAPI();  // Fetch the latest userId from the API
+    _getUserDataFromAPI();
+    _getEmployeeData();
+    _getServiceData();
+    _getLastReservation();
   }
 
-  // Fetch the latest userId from the API
-  Future<void> _getLatestUserIdFromAPI() async {
+  // Fetch user data
+  Future<void> _getUserDataFromAPI() async {
     final response = await http.get(Uri.parse('https://petcare.mahasiswarandom.my.id/api/data-users'));
 
     if (response.statusCode == 200) {
       var data = json.decode(response.body);
-      // Find the latest userId from the response
       var latestUser = data.last;
       setState(() {
-        userId = latestUser['id']; // Update the userId with the latest value
+        userId = latestUser['id'];
+        name = latestUser['name'];
       });
-      _getUsernameFromAPI(userId);  // Fetch the username using the latest userId
     } else {
       print('Failed to load user data');
     }
   }
 
-  // Fetch username from the API based on the userId
-  Future<void> _getUsernameFromAPI(int id) async {
-    final response = await http.get(Uri.parse('https://petcare.mahasiswarandom.my.id/api/data-users'));
+  // Fetch employee data
+  Future<void> _getEmployeeData() async {
+    final response = await http.get(Uri.parse('https://petcare.mahasiswarandom.my.id/api/data-employees'));
 
     if (response.statusCode == 200) {
       var data = json.decode(response.body);
-      // Find the user with the matching ID from the response
-      var user = data.firstWhere((user) => user['id'] == id, orElse: () => null);
-
-      if (user != null) {
-        setState(() {
-          name = user['name']; // Update the username with the fetched value
-        });
-      } else {
-        print('User not found');
+      List<EmployeeModel> employeeList = [];
+      for (var emp in data) {
+        employeeList.add(EmployeeModel.fromJson(emp));
       }
+      setState(() {
+        employees = employeeList;
+      });
     } else {
-      print('Failed to load user data');
+      print('Failed to load employee data');
+    }
+  }
+
+  // Fetch service data
+  Future<void> _getServiceData() async {
+    final response = await http.get(Uri.parse('https://petcare.mahasiswarandom.my.id/api/data-services'));
+
+    if (response.statusCode == 200) {
+      var data = json.decode(response.body)['services'];
+      List<ServiceModel> serviceList = [];
+      for (var service in data) {
+        serviceList.add(ServiceModel.fromJson(service));
+      }
+      setState(() {
+        services = serviceList;
+      });
+    } else {
+      print('Failed to load service data');
+    }
+  }
+
+  // Fetch last reservation
+  Future<void> _getLastReservation() async {
+    final response = await http.get(Uri.parse('https://petcare.mahasiswarandom.my.id/api/reservations'));
+
+    if (response.statusCode == 200) {
+      var data = json.decode(response.body);
+      var latestReservationData = data.isNotEmpty ? data.last : null;
+      setState(() {
+        lastReservation = latestReservationData;
+      });
+    } else {
+      print('Failed to load reservation data');
     }
   }
 
@@ -83,16 +119,15 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             children: [
               const SizedBox(height: 20),
-              _greetings(),  // Display the username in the greeting message
+              _greetings(),
               const SizedBox(height: 20),
-              _card(),
+              _createReservationButton(),
               const SizedBox(height: 20),
-              _search(),
+              _lastReservationCard(),
               const SizedBox(height: 20),
               _services(),
-              const SizedBox(height: 27),
-              _employees(),
               const SizedBox(height: 20),
+              _employees(),
             ],
           ),
         ),
@@ -100,8 +135,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Method for bottom navigation bar
-Container _bottomNavigationBar() {
+  // Bottom navigation bar
+  Container _bottomNavigationBar() {
     return Container(
       height: 76,
       decoration: BoxDecoration(
@@ -124,10 +159,7 @@ Container _bottomNavigationBar() {
               setState(() {
                 selectedMenu = index;
               });
-
-              // If the fileText icon is pressed (index 1)
               if (index == 1) {
-                // Navigate to ReservationScreen
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => ReservationScreen()),
@@ -158,22 +190,148 @@ Container _bottomNavigationBar() {
     );
   }
 
-
+  // Employees List
   ListView _employees() {
     return ListView.separated(
       padding: EdgeInsets.symmetric(horizontal: 20),
       physics: const NeverScrollableScrollPhysics(),
       shrinkWrap: true,
-      itemBuilder: (context, index) => _employee(employees[index]),
+      itemBuilder: (context, index) {
+        var employee = employees[index];
+        return _employee(employee);
+      },
       separatorBuilder: (context, index) => const SizedBox(height: 11),
       itemCount: employees.length,
     );
   }
 
-  Container _employee(EmployeesModel employeesModel) {
+  // Employee Widget
+// Employee Widget
+Container _employee(EmployeeModel employee) {
+  String baseUrl = 'https://petcare.mahasiswarandom.my.id/storage/'; // Base URL
+  String imageUrl = baseUrl + employee.photo;  // Complete image URL
+
+  return Container(
+    padding: const EdgeInsets.all(20),
+    decoration: BoxDecoration(
+      boxShadow: [
+        BoxShadow(
+          color: const Color(0xFFF1E5E5).withOpacity(.22),
+          blurRadius: 20,
+          offset: const Offset(0, 10),
+        )
+      ],
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(14),
+    ),
+    child: Row(
+      children: [
+        Container(
+          clipBehavior: Clip.hardEdge,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Image.network(
+            imageUrl,
+            width: 88,
+            height: 103,
+            errorBuilder: (context, error, stackTrace) {
+              return Icon(Icons.error, size: 88); // If image fails to load, show error icon
+            },
+          ),
+        ),
+        const SizedBox(width: 20),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              employee.name,
+              style: GoogleFonts.manrope(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF3F3E3F)),
+            ),
+            const SizedBox(height: 7),
+            Row(
+              children: [
+                const Icon(
+                  FeatherIcons.phone,
+                  size: 14,
+                  color: Color(0xFFCACACA),
+                ),
+                const SizedBox(width: 7),
+                Text(employee.phone,
+                    style: GoogleFonts.manrope(fontSize: 12, color: Colors.black))
+              ],
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
+  }
+
+  // Services List
+  SizedBox _services() {
+    return SizedBox(
+      height: 136,
+      child: ListView.builder(
+        padding: const EdgeInsets.only(left: 20),
+        scrollDirection: Axis.horizontal,
+        itemCount: services.length,
+        itemBuilder: (context, index) {
+          return _service(services[index]);
+        },
+      ),
+    );
+  }
+
+  // Service Widget
+  Padding _service(ServiceModel service) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 20),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        width: 220,
+        decoration: BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFF1E5E5).withOpacity(.22),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            )
+          ],
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(service.name,
+                style: GoogleFonts.manrope(
+                    fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF3F3E3F))),
+            const SizedBox(height: 10),
+            Text(service.description,
+                style: GoogleFonts.manrope(fontSize: 12, color: const Color(0xFF6B6A6A))),
+            const SizedBox(height: 10),
+            Text(service.price,
+                style: GoogleFonts.manrope(fontSize: 14, fontWeight: FontWeight.bold, color: const Color(0xFF818AF9)))
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Last Reservation Card
+  Widget _lastReservationCard() {
+    if (lastReservation == null) {
+      return const SizedBox();
+    }
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
+        color: Colors.white,
         boxShadow: [
           BoxShadow(
             color: const Color(0xFFF1E5E5).withOpacity(.22),
@@ -181,148 +339,56 @@ Container _bottomNavigationBar() {
             offset: const Offset(0, 10),
           )
         ],
-        color: Colors.white,
         borderRadius: BorderRadius.circular(14),
       ),
-      child: Row(
-        children: [
-          Container(
-            clipBehavior: Clip.hardEdge,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Image.asset(
-              'assets/images/${employeesModel.image}',
-              width: 88,
-              height: 103,
-            ),
-          ),
-          const SizedBox(width: 20),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                employeesModel.name,
-                style: GoogleFonts.manrope(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF3F3E3F)),
-              ),
-              const SizedBox(height: 7),
-              RichText(
-                  text: TextSpan(
-                      text: "Service: ${employeesModel.service.join(", ")} ",
-                      style: GoogleFonts.manrope(
-                          fontSize: 12, color: Colors.black))),
-              const SizedBox(height: 7),
-              Row(
-                children: [
-                  const Icon(
-                    FeatherIcons.phone,
-                    size: 14,
-                    color: Color(0xFFCACACA),
-                  ),
-                  const SizedBox(width: 7),
-                  Text("${employeesModel.phone}",
-                      style: GoogleFonts.manrope(fontSize: 12, color: Colors.black))
-                ],
-              ),
-              SizedBox(height: 7),
-              Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      color: const Color(0xFF34C759)),
-                  child: Text("Bersedia",
-                      style: GoogleFonts.manrope(
-                          fontSize: 12,
-                          color: Colors.white,
-                          height: 150 / 100))),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  SizedBox _services() {
-    return SizedBox(
-      height: 36,
-      child: ListView.separated(
-        padding: EdgeInsets.symmetric(horizontal: 20),
-        scrollDirection: Axis.horizontal,
-        itemBuilder: (context, index) {
-          var service = Service.all()[index];
-          return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            decoration: BoxDecoration(
-              color: selectedServices == index
-                  ? Color(0xFF818AF9)
-                  : const Color(0xFFF6F6F6),
-              border: selectedServices == index
-                  ? Border.all(color: const Color(0xFF818AF9), width: 2)
-                  : Border.all(color: const Color(0xFFF6F6F6), width: 2),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: GestureDetector(
-              onTap: () {
-                setState(() {
-                  selectedServices = index;
-                });
-              },
-              child: Center(
-                child: Text(
-                  service,
-                  style: GoogleFonts.manrope(
-                    fontSize: 13,
-                    color: selectedServices == index ? Colors.white : Colors.black,
-                  ),
-                ),
-              ),
-            ),
-          );
-        },
-        separatorBuilder: (context, index) => const SizedBox(width: 10),
-        itemCount: Service.all().length,
-      ),
-    );
-  }
-
-  Padding _search() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: TextField(
-        decoration: InputDecoration(
-          prefixIcon: const Icon(FeatherIcons.search),
-          hintText: 'Search for a service or employee...',
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Padding _greetings() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Hello, $name!',
+            'Last Reservation',
             style: GoogleFonts.manrope(
-                fontWeight: FontWeight.w800,
-                fontSize: 24,
-                color: const Color(0xFF3F3E3F)),
+                fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF3F3E3F)),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'Service: ${lastReservation!['service']['name']}',
+            style: GoogleFonts.manrope(fontSize: 14, color: const Color(0xFF818AF9)),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'Date: ${lastReservation!['created_at']}',
+            style: GoogleFonts.manrope(fontSize: 12, color: const Color(0xFF6B6A6A)),
           ),
         ],
       ),
     );
   }
 
-  _card() {
-    return Container(); // Add card widget if needed.
+  // Greeting Widget
+  Widget _greetings() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Hello, $name',
+            style: GoogleFonts.manrope(
+                fontSize: 22, fontWeight: FontWeight.bold, color: const Color(0xFF3F3E3F)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Create Reservation Button
+  ElevatedButton _createReservationButton() {
+    return ElevatedButton(
+      onPressed: () {
+        // Implement your reservation logic
+      },
+      child: const Text('Create Reservation'),
+    );
   }
 }
 

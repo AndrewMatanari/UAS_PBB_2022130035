@@ -45,6 +45,7 @@ dependencies:
   google_sign_in: ^6.2.2
   http: ^1.2.2
   feather_icons: ^1.2.0
+  intl: ^0.20.1
 
 dev_dependencies:
   flutter_test:

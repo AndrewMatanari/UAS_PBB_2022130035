@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const SplashScreen(), // Mulai dari SplashScreen
+      home: const SplashScreen(),
       routes: {
         '/login': (context) =>  LoginScreen(),
         '/profile': (context) =>  ProfileScreen(),
