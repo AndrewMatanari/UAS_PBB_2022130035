@@ -1,159 +1,185 @@
-// import 'package:firebase_auth/firebase_auth.dart';
-// import 'package:cloud_firestore/cloud_firestore.dart';
-// import 'package:flutter/material.dart';
-// import 'package:google_fonts/google_fonts.dart';
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
-// class EditProfileScreen extends StatefulWidget {
-//   const EditProfileScreen({super.key});
+class EditProfileScreen extends StatefulWidget {
+  @override
+  _EditProfileScreenState createState() => _EditProfileScreenState();
+}
 
-//   @override
-//   State<EditProfileScreen> createState() => _EditProfileScreenState();
-// }
+class _EditProfileScreenState extends State<EditProfileScreen> {
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
+  File? _profileImage;
+  bool _isLoading = false;
+  String _userId = "1"; // Replace with actual user ID when using real data
+  String _currentProfileImage = ""; // URL or local path to the current profile image
 
-// class _EditProfileScreenState extends State<EditProfileScreen> {
-//   final FirebaseAuth _auth = FirebaseAuth.instance;
-//   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  // Fetch the user data (Replace with actual API call)
+  Future<void> _getUserData() async {
+    setState(() {
+      _isLoading = true;
+    });
 
-//   final TextEditingController _nameController = TextEditingController();
-//   final TextEditingController _emailController = TextEditingController();
-//   final TextEditingController _phoneController = TextEditingController();
-//   final TextEditingController _addressController = TextEditingController();
+    try {
+      final response = await http.get(Uri.parse('https://petcare.mahasiswarandom.my.id/api/data-users'));
+      if (response.statusCode == 200) {
+        var data = json.decode(response.body);
+        var userData = data.isNotEmpty ? data.last : {};  // Assuming the last user in the list is the one we need
+		
+        // Now, populate the form fields
+        setState(() {
+          _nameController.text = userData['name'];
+          _emailController.text = userData['email'];
+          _phoneController.text = userData['phone'];
+          _currentProfileImage = userData['profile_image']; // URL or local path
+        });
+      } else {
+        throw Exception('Failed to load user data');
+      }
+    } catch (e) {
+      print(e);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error fetching user data')));
+    }
 
-//   @override
-//   void initState() {
-//     super.initState();
-//     _loadUserData();
-//   }
+    setState(() {
+      _isLoading = false;
+    });
+  }
 
-//   Future<void> _loadUserData() async {
-//     final user = _auth.currentUser;
-//     final userData = await _firestore.collection('users').doc(user?.uid).get();
+  // Function to pick the image
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _profileImage = File(pickedFile.path);
+      });
+    }
+  }
 
-//     setState(() {
-//       _nameController.text = user?.displayName ?? '';
-//       _emailController.text = user?.email ?? '';
-//       _phoneController.text = userData['phone'] ?? '';
-//       _addressController.text = userData['address'] ?? '';
-//     });
-//   }
+  // Function to update the user profile (Replace with actual API call)
+  Future<void> _updateProfile() async {
+    setState(() {
+      _isLoading = true;
+    });
 
-//   Future<void> _saveProfile() async {
-//     final user = _auth.currentUser;
+    try {
+      final uri = Uri.parse('https://petcare.mahasiswarandom.my.id/api/update-user');
+      var request = http.MultipartRequest('POST', uri);
 
-//     try {
-//       // Update Firebase Authentication displayName
-//       await user?.updateDisplayName(_nameController.text.trim());
-//       await user?.reload();
+      request.fields['user_id'] = _userId;
+      request.fields['name'] = _nameController.text;
+      request.fields['email'] = _emailController.text;
+      request.fields['phone'] = _phoneController.text;
 
-//       // Update additional details in Firestore
-//       await _firestore.collection('users').doc(user?.uid).set({
-//         'phone': _phoneController.text.trim(),
-//         'address': _addressController.text.trim(),
-//       }, SetOptions(merge: true));
+      if (_profileImage != null) {
+        var profileImageFile = await http.MultipartFile.fromPath('profile_image', _profileImage!.path);
+        request.files.add(profileImageFile);
+      }
 
-//       // Show success message and navigate back
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         const SnackBar(content: Text('Profile updated successfully!')),
-//       );
-//       Navigator.of(context).pop();
-//     } catch (e) {
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         SnackBar(content: Text('Error: ${e.toString()}')),
-//       );
-//     }
-//   }
+      var response = await request.send();
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Profile updated successfully!')));
+      } else {
+        throw Exception('Failed to update profile');
+      }
+    } catch (e) {
+      print(e);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error updating profile')));
+    }
 
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         title: Text(
-//           "Edit Profile",
-//           style: GoogleFonts.poppins(
-//             fontSize: 22,
-//             fontWeight: FontWeight.bold,
-//             color: Colors.white,
-//           ),
-//         ),
-//         backgroundColor: const Color(0xFF5F5F9F),
-//         elevation: 0,
-//         centerTitle: true,
-//       ),
-//       body: SingleChildScrollView(
-//         padding: const EdgeInsets.all(16.0),
-//         child: Column(
-//           crossAxisAlignment: CrossAxisAlignment.start,
-//           children: [
-//             // Name Field
-//             TextField(
-//               controller: _nameController,
-//               decoration: InputDecoration(
-//                 labelText: "Name",
-//                 labelStyle: GoogleFonts.poppins(fontSize: 16),
-//                 border: const OutlineInputBorder(),
-//               ),
-//             ),
-//             const SizedBox(height: 16),
+    setState(() {
+      _isLoading = false;
+    });
+  }
 
-//             // Email Field (non-editable)
-//             TextField(
-//               controller: _emailController,
-//               readOnly: true,
-//               decoration: InputDecoration(
-//                 labelText: "Email",
-//                 labelStyle: GoogleFonts.poppins(fontSize: 16),
-//                 border: const OutlineInputBorder(),
-//               ),
-//             ),
-//             const SizedBox(height: 16),
+  @override
+  void initState() {
+    super.initState();
+    _getUserData(); // Fetch user data when the screen is initialized
+  }
 
-//             // Phone Field
-//             TextField(
-//               controller: _phoneController,
-//               keyboardType: TextInputType.phone,
-//               decoration: InputDecoration(
-//                 labelText: "Phone Number",
-//                 labelStyle: GoogleFonts.poppins(fontSize: 16),
-//                 border: const OutlineInputBorder(),
-//               ),
-//             ),
-//             const SizedBox(height: 16),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Edit Profile', style: GoogleFonts.manrope(fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.blueAccent,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: GestureDetector(
+                        onTap: _pickImage,
+                        child: CircleAvatar(
+                          radius: 50,
+                          backgroundImage: _profileImage != null
+                              ? FileImage(_profileImage!) // Display picked image
+                              : (_currentProfileImage.isNotEmpty
+                                  ? NetworkImage(_currentProfileImage) // Use the profile image URL
+                                  : AssetImage('assets/default_profile.png') as ImageProvider), // Default image
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                    Text(
+                      'Name',
+                      style: GoogleFonts.manrope(fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+                    TextField(
+                      controller: _nameController,
+                      decoration: InputDecoration(hintText: _nameController.text.isEmpty ? 'Enter your name' : _nameController.text),
+                    ),
+                    SizedBox(height: 20),
+                    Text(
+                      'Email',
+                      style: GoogleFonts.manrope(fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+                    TextField(
+                      controller: _emailController,
+                      decoration: InputDecoration(hintText: _emailController.text.isEmpty ? 'Enter your email' : _emailController.text),
+                    ),
+                    SizedBox(height: 20),
+                    Text(
+                      'Phone Number',
+                      style: GoogleFonts.manrope(fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+                    TextField(
+                      controller: _phoneController,
+                      decoration: InputDecoration(hintText: _phoneController.text.isEmpty ? 'Enter your phone number' : _phoneController.text),
+                    ),
+                    SizedBox(height: 30),
+                    ElevatedButton(
+                      onPressed: _updateProfile,
+                      child: _isLoading
+                          ? CircularProgressIndicator(color: Colors.white)
+                          : Text('Save Changes', style: GoogleFonts.manrope(fontSize: 16, fontWeight: FontWeight.bold)),
+                      style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.symmetric(vertical: 15),
+                        backgroundColor: Colors.blueAccent,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+    );
+  }
+}
 
-//             // Address Field
-//             TextField(
-//               controller: _addressController,
-//               decoration: InputDecoration(
-//                 labelText: "Address",
-//                 labelStyle: GoogleFonts.poppins(fontSize: 16),
-//                 border: const OutlineInputBorder(),
-//               ),
-//             ),
-//             const SizedBox(height: 32),
-
-//             // Save Button
-//             ElevatedButton(
-//               onPressed: _saveProfile,
-//               style: ElevatedButton.styleFrom(
-//                 backgroundColor: const Color(0xFF5F5F9F),
-//                 padding: const EdgeInsets.symmetric(vertical: 16),
-//                 shape: RoundedRectangleBorder(
-//                   borderRadius: BorderRadius.circular(10),
-//                 ),
-//               ),
-//               child: Center(
-//                 child: Text(
-//                   "Save Changes",
-//                   style: GoogleFonts.poppins(
-//                     fontSize: 18,
-//                     fontWeight: FontWeight.bold,
-//                     color: Colors.white,
-//                   ),
-//                 ),
-//               ),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }

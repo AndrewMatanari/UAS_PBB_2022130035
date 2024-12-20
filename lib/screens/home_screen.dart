@@ -8,7 +8,8 @@ import 'package:petcare_mobile/models/service_model.dart';
 import 'package:http/http.dart' as http;
 import 'package:petcare_mobile/screens/reservation_screen.dart';
 import 'package:petcare_mobile/screens/buatreservasi_screen.dart';
-
+import 'package:petcare_mobile/screens/notification_screen.dart';
+import 'package:petcare_mobile/screens/editprofile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   HomeScreen({super.key});
@@ -46,7 +47,6 @@ class _HomeScreenState extends State<HomeScreen> {
   // Fetch user data
   Future<void> _getUserDataFromAPI() async {
     final response = await http.get(Uri.parse('https://petcare.mahasiswarandom.my.id/api/data-users'));
-
     if (response.statusCode == 200) {
       var data = json.decode(response.body);
       var latestUser = data.last;
@@ -62,7 +62,6 @@ class _HomeScreenState extends State<HomeScreen> {
   // Fetch employee data
   Future<void> _getEmployeeData() async {
     final response = await http.get(Uri.parse('https://petcare.mahasiswarandom.my.id/api/data-employees'));
-
     if (response.statusCode == 200) {
       var data = json.decode(response.body);
       List<EmployeeModel> employeeList = [];
@@ -80,7 +79,6 @@ class _HomeScreenState extends State<HomeScreen> {
   // Fetch service data
   Future<void> _getServiceData() async {
     final response = await http.get(Uri.parse('https://petcare.mahasiswarandom.my.id/api/data-services'));
-
     if (response.statusCode == 200) {
       var data = json.decode(response.body)['services'];
       List<ServiceModel> serviceList = [];
@@ -98,7 +96,6 @@ class _HomeScreenState extends State<HomeScreen> {
   // Fetch last reservation
   Future<void> _getLastReservation() async {
     final response = await http.get(Uri.parse('https://petcare.mahasiswarandom.my.id/api/reservations'));
-
     if (response.statusCode == 200) {
       var data = json.decode(response.body);
       var latestReservationData = data.isNotEmpty ? data.last : null;
@@ -113,8 +110,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.dark);
-
     return Scaffold(
+      backgroundColor: const Color(0xFFF7F7F7),
       bottomNavigationBar: _bottomNavigationBar(),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -124,9 +121,9 @@ class _HomeScreenState extends State<HomeScreen> {
               _greetings(),
               const SizedBox(height: 20),
               _createReservationButton(),
-              const SizedBox(height: 20),
+              const SizedBox(height: 10), // Reduced space
               _lastReservationCard(),
-              const SizedBox(height: 20),
+              const SizedBox(height: 15), // Reduced space
               _services(),
               const SizedBox(height: 20),
               _employees(),
@@ -138,59 +135,84 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // Bottom navigation bar
-  Container _bottomNavigationBar() {
-    return Container(
-      height: 76,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFDADADA).withOpacity(0.4),
-            blurRadius: 25,
-            offset: const Offset(0, -10),
-          ),
-        ],
+// Bottom navigation bar
+Widget _bottomNavigationBar() {
+  return Container(
+    height: 76,
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        colors: [Colors.purple.shade300, Colors.blue.shade400],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: List.generate(
-          menus.length,
-          (index) => GestureDetector(
-            onTap: () {
-              setState(() {
-                selectedMenu = index;
-              });
-              if (index == 1) {
+      borderRadius: BorderRadius.circular(30),
+      boxShadow: [
+        BoxShadow(
+          color: const Color(0xFFDADADA).withOpacity(0.4),
+          blurRadius: 25,
+          offset: const Offset(0, -10),
+        ),
+      ],
+    ),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: List.generate(
+        menus.length,  // Now, it correctly generates indices from 0 to 3
+        (index) => GestureDetector(
+          onTap: () {
+            setState(() {
+              selectedMenu = index;
+            });
+            switch (index) {
+              case 0:
+                // Home screen action, if needed
+                break;
+              case 1:
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => ReservationScreen()),
                 );
-              }
-            },
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
-              curve: Curves.easeInOut,
-              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-              decoration: BoxDecoration(
-                color: selectedMenu == index
-                    ? const Color(0xFF818AF9).withOpacity(0.1)
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              transform: Matrix4.identity()..scale(selectedMenu == index ? 1.1 : 1.0),
-              child: Icon(
-                menus[index],
-                color: selectedMenu == index
-                    ? const Color(0xFF818AF9)
-                    : const Color(0xFFCACACA).withOpacity(0.6),
-              ),
+                break;
+              case 2:
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => NotificationScreen()),
+                );
+                break;
+              case 3:
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => EditProfileScreen()),  // Navigate to EditProfileScreen
+                );
+                break;
+              default:
+            }
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeInOut,
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+            decoration: BoxDecoration(
+              color: selectedMenu == index
+                  ? const Color(0xFF818AF9).withOpacity(0.1)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            transform: Matrix4.identity()..scale(selectedMenu == index ? 1.1 : 1.0),
+            child: Icon(
+              index == 3 ? Icons.person : menus[index],
+              color: selectedMenu == index
+                  ? Colors.white  // Set icon color to white when selected
+                  : Colors.white.withOpacity(0.7),  // Lightened white when unselected
             ),
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
+
+
 
   // Employees List
   ListView _employees() {
@@ -208,75 +230,74 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // Employee Widget
-// Employee Widget
-Container _employee(EmployeeModel employee) {
-  String baseUrl = 'https://petcare.mahasiswarandom.my.id/storage/'; // Base URL
-  String imageUrl = baseUrl + employee.photo;  // Complete image URL
+  Container _employee(EmployeeModel employee) {
+    String baseUrl = 'https://petcare.mahasiswarandom.my.id/storage/'; // Base URL
+    String imageUrl = baseUrl + employee.photo;  // Complete image URL
 
-  return Container(
-    padding: const EdgeInsets.all(20),
-    decoration: BoxDecoration(
-      boxShadow: [
-        BoxShadow(
-          color: const Color(0xFFF1E5E5).withOpacity(.22),
-          blurRadius: 20,
-          offset: const Offset(0, 10),
-        )
-      ],
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(14),
-    ),
-    child: Row(
-      children: [
-        Container(
-          clipBehavior: Clip.hardEdge,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Image.network(
-            imageUrl,
-            width: 88,
-            height: 103,
-            errorBuilder: (context, error, stackTrace) {
-              return Icon(Icons.error, size: 88); // If image fails to load, show error icon
-            },
-          ),
-        ),
-        const SizedBox(width: 20),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              employee.name,
-              style: GoogleFonts.manrope(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF3F3E3F)),
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFF1E5E5).withOpacity(.22),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          )
+        ],
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          Container(
+            clipBehavior: Clip.hardEdge,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
             ),
-            const SizedBox(height: 7),
-            Row(
-              children: [
-                const Icon(
-                  FeatherIcons.phone,
-                  size: 14,
-                  color: Color(0xFFCACACA),
-                ),
-                const SizedBox(width: 7),
-                Text(employee.phone,
-                    style: GoogleFonts.manrope(fontSize: 12, color: Colors.black))
-              ],
+            child: Image.network(
+              imageUrl,
+              width: 88,
+              height: 103,
+              errorBuilder: (context, error, stackTrace) {
+                return Icon(Icons.error, size: 88); // If image fails to load, show error icon
+              },
             ),
-          ],
-        ),
-      ],
-    ),
-  );
+          ),
+          const SizedBox(width: 20),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                employee.name,
+                style: GoogleFonts.manrope(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF3F3E3F)),
+              ),
+              const SizedBox(height: 7),
+              Row(
+                children: [
+                  const Icon(
+                    FeatherIcons.phone,
+                    size: 14,
+                    color: Color(0xFFCACACA),
+                  ),
+                  const SizedBox(width: 7),
+                  Text(employee.phone,
+                      style: GoogleFonts.manrope(fontSize: 12, color: Colors.black))
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
-  // Services List
+  // Services List (Horizontal Scroll)
   SizedBox _services() {
     return SizedBox(
-      height: 136,
+      height: 250,  // Height adjusted for card display
       child: ListView.builder(
         padding: const EdgeInsets.only(left: 20),
         scrollDirection: Axis.horizontal,
@@ -288,14 +309,16 @@ Container _employee(EmployeeModel employee) {
     );
   }
 
-  // Service Widget
+  // Service Widget (Card Display)
   Padding _service(ServiceModel service) {
     return Padding(
       padding: const EdgeInsets.only(right: 20),
       child: Container(
         padding: const EdgeInsets.all(20),
-        width: 220,
+        width: 240,
         decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
               color: const Color(0xFFF1E5E5).withOpacity(.22),
@@ -303,96 +326,107 @@ Container _employee(EmployeeModel employee) {
               offset: const Offset(0, 10),
             )
           ],
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(service.name,
-                style: GoogleFonts.manrope(
-                    fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF3F3E3F))),
-            const SizedBox(height: 10),
-            Text(service.description,
-                style: GoogleFonts.manrope(fontSize: 12, color: const Color(0xFF6B6A6A))),
-            const SizedBox(height: 10),
-            Text(service.price,
-                style: GoogleFonts.manrope(fontSize: 14, fontWeight: FontWeight.bold, color: const Color(0xFF818AF9)))
+                style: GoogleFonts.manrope(fontSize: 18, fontWeight: FontWeight.w600)),
           ],
         ),
       ),
     );
   }
 
-  // Last Reservation Card
-  Widget _lastReservationCard() {
-    if (lastReservation == null) {
-      return const SizedBox();
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFF1E5E5).withOpacity(.22),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          )
-        ],
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+  // Greetings text widget
+  Widget _greetings() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
         children: [
           Text(
-            'Last Reservation',
-            style: GoogleFonts.manrope(
-                fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF3F3E3F)),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            'Service: ${lastReservation!['service']['name']}',
-            style: GoogleFonts.manrope(fontSize: 14, color: const Color(0xFF818AF9)),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            'Date: ${lastReservation!['created_at']}',
-            style: GoogleFonts.manrope(fontSize: 12, color: const Color(0xFF6B6A6A)),
+            'Hi, $name!',
+            style: GoogleFonts.manrope(fontSize: 24, fontWeight: FontWeight.w600),
           ),
         ],
       ),
-    );
-  }
-
-  // Greeting Widget
-  Widget _greetings() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            'Hello, $name',
-            style: GoogleFonts.manrope(
-                fontSize: 22, fontWeight: FontWeight.bold, color: const Color(0xFF3F3E3F)),
-          ),
-        ),
-      ],
     );
   }
 
   // Create Reservation Button
-  ElevatedButton _createReservationButton() {
-    return ElevatedButton(
-      onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => CreateReservationScreen()),
-        );
-      },
-      child: const Text('Create Reservation'),
+  Widget _createReservationButton() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => CreateReservationScreen()),
+          );
+        },
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          decoration: BoxDecoration(
+            color: Colors.purple.shade300,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Center(
+            child: Text(
+              'Buat Reservasi',
+              style: GoogleFonts.manrope(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
+  }
+
+  // Last Reservation Info
+  Widget _lastReservationCard() {
+    return lastReservation == null
+        ? SizedBox() 
+        : Container(
+            padding: const EdgeInsets.all(20),
+            margin: const EdgeInsets.symmetric(horizontal: 20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFF1E5E5).withOpacity(.22),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                )
+              ],
+            ),
+            child: Row(
+              children: [
+                Icon(FeatherIcons.check, size: 40, color: Colors.green),
+                const SizedBox(width: 15),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Last Reservation',
+                      style: GoogleFonts.manrope(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      'Service: ${lastReservation!['service_name']}',
+                      style: GoogleFonts.manrope(fontSize: 14, color: Colors.black),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
   }
 }
